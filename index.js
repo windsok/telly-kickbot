@@ -123,7 +123,7 @@ bot.on('message', (msg) => {
           transaction: trans
         })).then(([usr, created]) => {
           if (created) {
-            bot.sendMessage(msg.chat.id, 'Hello ' + memberName +'! PM me or get kicked, you have 15 minutes to act.')
+            bot.sendMessage(msg.chat.id, 'Hello ' + memberName +'! DM your Counterparty/Rare Pepe Wallet address me or get kicked, you have 15 minutes to act. I will give you a message to sign with Rare Pepe Wallet to prove you own the address. In RPW go to the cog menu and use the Sign Message feature. Paste the signature back to me and you will be validated.')
           }
         }).catch((err) => {
           console.log('Error'.bgRed.yellow, err)
@@ -435,6 +435,11 @@ function handleUserMessage(msg, user) {
       }
     } else {
       bot.sendMessage(msg.chat.id, 'Checking your signature.')
+      console.log(user.challenge)
+      console.log(bitcoin.networks.bitcoin.messagePrefix)
+      console.log(user.address)
+      console.log(msg.text.trim())
+      //let verify = bitcoinMessage.verify(msg.text.trim(), bitcoin.networks.bitcoin.messagePrefix, user.address, user.challenge)
       let verify = bitcoinMessage.verify(user.challenge, bitcoin.networks.bitcoin.messagePrefix, user.address, msg.text.trim())
       if (verify) {
         user.last_verify = Date.now()
@@ -542,14 +547,17 @@ function generateTimeBans(groups) {
   let bans = []
 
   forEachMemberInEachGroup(groups, 'members', (token, group, user) => {
-    if (!user.createdAt) {
+    if (!user.join_date) {
+      console.log("no user.createdAt:", group.tid, user.tid, user)
       //bans.push({gid: group.tid, uid: user.tid, reason: 'no-date', detail: {}})
     } else {
       let start = moment(Date.now())
-      let end = moment(user.createdAt)
+      let end = moment(user.join_date)
       let diff = start.diff(end)
+      console.log("checking user:", group.tid, user.tid, start, end, diff)
 
       if ((diff > (config.maxSecondsWithoutVerify * 1000)) && !user.address) {
+        console.log("banning:", group.tid, user.tid)
         bans.push({gid: group.tid, uid: user.tid, reason: 'validate-timeout', detail: {}})
       }
     }
@@ -773,6 +781,7 @@ function processBotAndDBActions(bans, unbans) {
 }
 
 function wholeCheck() {
+  console.log('Running whole check...')
   Promise.all([xcp.hasNewBlock(), gatherGroups()])
     .then(([{isNew, height}, groups]) => {
       if (isNew) {

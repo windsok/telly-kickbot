@@ -15,7 +15,7 @@
 
 
 const getJSON = require('get-json')
-const xcpAPI = 'https://counterpartychain.io/api/'
+const xcpAPI = 'https://xchain.io/api/'
 
 var currentBlock = 0
 
@@ -54,7 +54,7 @@ function getAssetHolders(asset) {
             total = parseInt(response.total)
             response.data.forEach((holder) => {
               let tb = {}
-              tb[asset] = parseFloat(holder.amount)
+              tb[asset] = parseFloat(holder.quantity)
               holders[holder.address] = tb
             })
             processed += response.data.length
